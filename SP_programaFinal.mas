@@ -1,0 +1,510 @@
+/ ------------------ PROCESAMIENTO ------------------
+entradaDatos, Input / Entrada de un dato
+	Store Value / Valor ingresado o actual
+
+	/ Verificar Value > minimo
+	Load Value
+	Subt Rminimo  / Rango minimo del sensor 1 
+	SkipCond 800
+	Jump continua
+
+	/ Verificar Value < maximo dentro del rango del sensor 1
+	revisarS1, load RmaxS1
+		Subt Value
+		SkipCond 800    / Corroborar si entra en el sensor
+		Jump revisarS2	/ Revisar si entra en el rango del sensor 2
+		Jump agregaS1
+	
+	/ Verificar que estan dentro del rango del sensor 2
+	revisarS2, load RmaxS2
+		Subt Value
+		SkipCond 800
+		Jump revisarS3
+		Jump agregaS2
+
+	revisarS3, load RmaxS3 / Verificar si Value entra en el sensor 3
+		Subt Value
+		SkipCond 800
+		Jump revisarS4
+		Jump agregaS3
+
+	revisarS4, load RmaxS4 / Verificar si Value entra en el sensor 4
+		Subt Value
+		SkipCond 800
+		Jump continua
+		Jump agregaS4
+		
+	/ Si cumple la condicion agregar al sensor 1
+	agregaS1, Load posS1
+		Subt cien
+		SkipCond 400	/ Verificar cuantos datos hay en el sensor
+		Jump guardarS1
+		Jump continua
+
+		guardarS1, Load S1 / Guardar el dato si todavía no hay 100 datos en el sensor
+			Add posS1
+			Store Y
+			Load Value
+			Subt sensor1  / Resta para solo guardar las decenas, ej. 109 -> 09
+			Store Value   
+			StoreI Y	  / Alamenar el dato en la localidad indicada
+			Load posS1
+			Add one
+			Store posS1   / Actualizar la variable
+			Jump continua
+	
+	/ Agregar los datos a sus respectivos sensores
+	agregaS2, Load posS2
+		Subt cien
+		SkipCond 400
+		Jump guardarS2
+		Jump continua
+	
+		guardarS2, Load S2
+			Add posS2
+			Store Y
+			Load Value
+			Subt sensor2
+			Store Value
+			StoreI Y
+			Load posS2
+			Add one
+			Store posS2
+			Jump continua
+	
+	agregaS3, Load posS3 
+		Subt cien
+		SkipCond 400
+		Jump guardarS3 
+		Jump continua 
+	
+		guardarS3, Load S3
+			Add posS3
+			Store Y	        
+			Load Value
+			Subt sensor3
+			Store Value
+			StoreI Y
+			Load posS3
+			Add one
+			Store posS3
+			Jump continua
+	
+	agregaS4, Load posS4 
+		Subt cien
+		SkipCond 400
+		Jump guardarS4 
+		Jump continua
+	
+		guardarS4, Load S4
+			Add posS4
+			Store Y	        
+			Load Value
+			Subt sensor4
+			Store Value
+			StoreI Y
+			Load posS4
+			Add one
+			Store posS4
+			Jump continua
+	
+	/ Corroborar la cantidad de datos en cada sensor, cuanto tengan 100 datos 
+	/ se procederá a calcuular el minimo y maximo de cada uno
+    continua, Load posS1
+		Subt cien
+		Skipcond 400
+		Jump entradaDatos
+
+		Load posS2
+		Subt cien
+		Skipcond 400
+		Jump entradaDatos
+
+		Load posS3
+		Subt cien
+		Skipcond 400
+		Jump entradaDatos
+
+		Load posS4
+		Subt cien
+		Skipcond 400
+		Jump entradaDatos
+
+		Jump calcularMinMax
+
+/ ---------------- CALCULO DE MINIMO Y MAXIMO POR SENSOR ----------------
+calcularMinMax, Load posS1  / Preparar contadores para buscar minimos y maximo
+    Store countMinS1		/ Contador para el calculo del minimo del sensor 1
+    Store countMaxS1		/ Contador para el calculo del maximo del sensor 1
+
+    Load posS2				/ Mismo caso para los demás sensores
+    Store countMinS2
+    Store countMaxS2
+
+    Load posS3
+    Store countMinS3
+    Store countMaxS3
+
+    Load posS4
+    Store countMinS4
+    Store countMaxS4
+
+	/ --------- MINIMOS --------- 
+	minS1, Load countMinS1	/ Este contador se actualizará
+		Skipcond 400
+		Jump procesaMinS1
+		Jump minS2
+
+		procesaMinS1, LoadI hexMinS1	/ Se realiza la comparación entre el minimo actual 
+		    Subt minimoS1				/ y el siguiente dato
+		    Skipcond 000
+		    Jump siguienteMinS1
+		
+		    LoadI hexMinS1				/ Se actualiza el minimo
+		    Store minimoS1
+
+		siguienteMinS1, Load hexMinS1	/ Se preparan y actualizan nuevamente los contadores
+			Add one
+			Store hexMinS1
+			
+			Load countMinS1
+			Subt one
+			Store countMinS1
+			Skipcond 400
+			Jump minS1
+
+	/ Mismo procedimiento para los demás
+	minS2, Load countMinS2
+		Skipcond 400
+		Jump procesaMinS2
+		Jump minS3
+
+		procesaMinS2, LoadI hexMinS2
+			Subt minimoS2
+			Skipcond 000
+			Jump siguienteMinS2
+		
+			LoadI hexMinS2
+			Store minimoS2
+
+		siguienteMinS2, Load hexMinS2
+			Add one
+			Store hexMinS2
+			
+			Load countMinS2
+			Subt one
+			Store countMinS2
+			Skipcond 400
+			Jump minS2
+
+	minS3, Load countMinS3
+		Skipcond 400
+		Jump procesaMinS3
+		Jump minS4
+
+		procesaMinS3, LoadI hexMinS3
+			Subt minimoS3
+			Skipcond 000
+			Jump siguienteMinS3
+		
+			LoadI hexMinS3
+			Store minimoS3
+
+		siguienteMinS3, Load hexMinS3
+			Add one
+			Store hexMinS3
+			
+			Load countMinS3
+			Subt one
+			Store countMinS3
+			Skipcond 400
+			Jump minS3
+
+	minS4, Load countMinS4
+		Skipcond 400
+		Jump procesaMinS4
+		Jump maxS1
+
+		procesaMinS4, LoadI hexMinS4
+			Subt minimoS4
+			Skipcond 000
+			Jump siguienteMinS4
+		
+			LoadI hexMinS4
+			Store minimoS4
+
+		siguienteMinS4, Load hexMinS4
+			Add one
+			Store hexMinS4
+			
+			Load countMinS4
+			Subt one
+			Store countMinS4
+			Skipcond 400
+			Jump minS4
+	
+	/ --------- MAXIMOS ---------
+	/ Misma metodología con el calculo de maximos
+	maxS1, Load countMaxS1
+		Skipcond 400
+		Jump procesaMaxS1
+		Jump maxS2
+
+		procesaMaxS1, LoadI hexMaxS1
+			Subt maximoS1
+			Skipcond 800
+			Jump siguienteMaxS1
+
+			LoadI hexMaxS1
+			Store maximoS1
+
+		siguienteMaxS1, Load hexMaxS1
+			Add one
+			Store hexMaxS1
+			
+			Load countMaxS1
+			Subt one
+			Store countMaxS1
+			Skipcond 400
+			Jump maxS1
+
+	maxS2, Load countMaxS2
+		Skipcond 400
+		Jump procesaMaxS2
+		Jump maxS3 
+
+		procesaMaxS2, LoadI hexMaxS2
+			Subt maximoS2
+			Skipcond 800
+			Jump siguienteMaxS2
+
+			LoadI hexMaxS2
+			Store maximoS2
+
+		siguienteMaxS2, Load hexMaxS2
+			Add one
+			Store hexMaxS2
+			
+			Load countMaxS2
+			Subt one
+			Store countMaxS2
+			Skipcond 400
+			Jump maxS2
+
+	maxS3, Load countMaxS3
+		Skipcond 400
+		Jump procesaMaxS3
+		Jump maxS4 
+
+		procesaMaxS3, LoadI hexMaxS3
+			Subt maximoS3
+			Skipcond 800
+			Jump siguienteMaxS3
+
+			LoadI hexMaxS3
+			Store maximoS3
+
+		siguienteMaxS3, Load hexMaxS3
+			Add one
+			Store hexMaxS3
+			
+			Load countMaxS3
+			Subt one
+			Store countMaxS3
+			Skipcond 400
+			Jump maxS3
+
+	maxS4, Load countMaxS4
+		Skipcond 400
+		Jump procesaMaxS4
+		Jump encontrarMedia 
+
+		procesaMaxS4, LoadI hexMaxS4
+			Subt maximoS4
+			Skipcond 800
+			Jump siguienteMaxS4
+
+			LoadI hexMaxS4
+			Store maximoS4
+
+		siguienteMaxS4, Load hexMaxS4
+			Add one
+			Store hexMaxS4
+			
+			Load countMaxS4
+			Subt one
+			Store countMaxS4
+			Skipcond 400
+			Jump maxS4
+			Jump encontrarMedia
+
+/ ------------------ ENCONTRAR MEDIA POR SENSOR ------------------
+encontrarMedia, Load posS1 / Retomamos la cantidad de datos almacenados
+	Skipcond 400
+	Jump medS1 				/ Salta al calculo de la media si hay datos en el sensor
+	Jump comprobarS2
+
+	medS1, Load minimoS1	/ El resultado de la resta será negativo hasta que se crucen
+		Subt maximoS1		/ el minimo y maximo
+		SkipCond 800
+		Jump actualizarMedS1 	/ Actualiza el el min y max
+		Load maximoS1		/ La media tomará el valor del maximo el cual 
+		Store mediaS1		/ será menor en el momento del cruce
+		Load Sensor1		/ Indica el numero del sensor
+		Output				/ Se imprime el numero de sensor 
+		Load mediaS1		/ y posteriormente la media obtenida
+		Output
+		Jump comprobarS2
+		
+		actualizarMedS1, Load minimoS1 / Sumamos una unidad al minimo
+		Add one
+		Store minimoS1
+		Load maximoS1		/ restamos una unidad al maximo
+		Subt one
+		Store maximoS1
+		Jump medS1
+	
+	comprobarS2, Load posS2
+		Skipcond 400
+		Jump medS2 
+		Jump comprobarS3 
+
+		medS2, Load minimoS2
+			Subt maximoS2
+			SkipCond 800
+			Jump actualizarMedS2
+			Load maximoS2
+			Store mediaS2
+			Load Sensor2
+			Output
+			Load mediaS2
+			Output
+			Jump comprobarS3
+			
+		actualizarMedS2, Load minimoS2
+			Add one
+			Store minimoS2
+			Load maximoS2
+			Subt one
+			Store maximoS2
+			Jump medS2
+	
+	comprobarS3, Load posS3 
+		Skipcond 400
+		Jump medS3  
+		Jump comprobarS4 
+
+		medS3, Load minimoS3
+			Subt maximoS3
+			SkipCond 800
+			Jump actualizarMedS3
+			Load maximoS3
+			Store mediaS3
+			Load Sensor3
+			Output
+			Load mediaS3
+			Output
+			Jump comprobarS4
+			
+		actualizarMedS3, Load minimoS3
+			Add one
+			Store minimoS3
+			Load maximoS3
+			Subt one
+			Store maximoS3
+			Jump medS3 
+	
+	comprobarS4, Load posS4
+		Skipcond 400
+		Jump medS4 
+		Jump fin 
+
+		medS4, Load minimoS4
+			Subt maximoS4
+			SkipCond 800
+			Jump actualizarMedS4
+			Load maximoS4
+			Store mediaS4
+			Load Sensor4
+			Output
+			Load mediaS4
+			Output
+			Jump fin
+			
+		actualizarMedS4, Load minimoS4
+			Add one
+			Store minimoS4
+			Load maximoS4
+			Subt one
+			Store maximoS4
+			Jump medS4
+
+fin,  Halt
+
+Y, DEC 0            / Lugar de memoria
+cien, DEC 100    / Contador
+one, DEC 1          / Valor numerico, 1
+
+S1, HEX A00         / Posición inicial del sensor 1
+S2, HEX B00         / Posición inicial del sensor 2
+S3, HEX C00         / Posicion inicial del sensor 3
+S4, HEX D00         / Posicion inicial del sensor 4
+
+Value, DEC 0        / Valor ingresado o actual
+Rminimo, DEC 99      / Valor minimo del rango entre sensores
+RmaxS1, DEC 200      / Valor maximo para el sensor 1 pero minimo del sensor 2
+RmaxS2, DEC 300		/ Valor maximo para el sensor 2 pero minimo del sensor 3
+RmaxS3, DEC 400		/ Valor maximo para el sensor 3 pero minimo del sensor 4
+RmaxS4, DEC 500		/ Valor maximo para el sensor 4
+
+posS1, DEC 0		/ Variables para controlar la posición de memoria de los sensores
+posS2, DEC 0
+posS3, DEC 0
+posS4, DEC 0
+
+sensor1, DEC 100	/ Variables auxiliares para almacenar solo 2 digitos por sensor
+sensor2, DEC 200
+sensor3, DEC 300
+sensor4, DEC 400
+
+minimoS1, DEC 100
+countMinS1, DEC 0
+hexMinS1, HEX A00
+
+minimoS2, DEC 100
+countMinS2, DEC 0
+hexMinS2, HEX B00
+
+minimoS3, DEC 100
+countMinS3, DEC 0
+hexMinS3, HEX C00
+
+minimoS4, DEC 100
+countMinS4, DEC 0
+hexMinS4, HEX D00
+
+maximoS1, DEC 0
+countMaxS1, DEC 0
+hexMaxS1, HEX A00
+
+maximoS2, DEC 0
+countMaxS2, DEC 0
+hexMaxS2, HEX B00
+
+maximoS3, DEC 0
+countMaxS3, DEC 0
+hexMaxS3, HEX C00
+
+maximoS4, DEC 0
+countMaxS4, DEC 0
+hexMaxS4, HEX D00
+
+mediaS1, DEC 0
+mediaS2, DEC 0
+mediaS3, DEC 0
+mediaS4, DEC 0
+
+Sensor1, DEC 1
+Sensor2, DEC 2
+Sensor3, DEC 3
+Sensor4, DEC 4
