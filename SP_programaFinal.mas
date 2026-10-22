@@ -467,7 +467,7 @@ sensor2, DEC 200
 sensor3, DEC 300
 sensor4, DEC 400
 
-minimoS1, DEC 100
+minimoS1, DEC 100	/ Variables para minimos y maximos, así como localidad inicial y contadores
 countMinS1, DEC 0
 hexMinS1, HEX A00
 
@@ -499,12 +499,12 @@ maximoS4, DEC 0
 countMaxS4, DEC 0
 hexMaxS4, HEX D00
 
-mediaS1, DEC 0
+mediaS1, DEC 0		/ Variables que guardan la media de cada sensor
 mediaS2, DEC 0
 mediaS3, DEC 0
 mediaS4, DEC 0
 
-Sensor1, DEC 1
+Sensor1, DEC 1		/ Variables numericas, inidican el numero de sensor
 Sensor2, DEC 2
 Sensor3, DEC 3
 Sensor4, DEC 4
